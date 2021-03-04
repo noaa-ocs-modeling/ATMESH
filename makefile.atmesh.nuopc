@@ -15,8 +15,8 @@ endif
 include $(ESMFMKFILE)
 
 
-INCDIRS := -I . 
-LIBDIRS := -L . 
+INCDIRS := -I. 
+LIBDIRS := -L. 
 LIBSS   :=  -lnetcdf  -lnetcdff -lhdf5 -lhdf5_fortran
 
 INCDIRS += -I${NETCDFHOME}/include/   
