@@ -699,7 +699,7 @@ module ATMESH
         file=__FILE__)) &
         return  ! bail out
 
-    !print *      , "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
+    print *      , "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
     write(info, *) "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
     call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
     
@@ -725,16 +725,13 @@ module ATMESH
     allocate (tmp(mdataOutw%NumOwnedNd))
 
     ! >>>>> PACK and send UWND
-    !call State_getFldPtr(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd,rc=rc)
-    call State_getFldPtr_(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd, &
+    !call State_GetFldPtr(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd,rc=rc)
+    call State_GetFldPtr_(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd, &
       rc=rc,dump=.false.,timeStr=timeStr)
-
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-
-      !print *, 'mdataOutw%NumOwnedNd > ',mdataOutw%NumOwnedNd, 'UWND > ', UWND(1:10,1)
 
     iwind_test = iwind_test + 1
     !fill only owned nodes for tmp vector
@@ -747,9 +744,9 @@ module ATMESH
     dataPtr_uwnd = tmp
     !----------------------------------------
     ! >>>>> PACK and send VWND
-    call State_getFldPtr_(ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd, &
+    call State_GetFldPtr_(ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd, &
       rc=rc,dump=.false.,timeStr=timeStr)
-    !call State_getFldPtr (ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd,rc=rc)
+    !call State_GetFldPtr(ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd,rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -764,7 +761,7 @@ module ATMESH
     dataPtr_vwnd = tmp
     !----------------------------------------
     ! >>>>> PACK and send PRES
-    call State_getFldPtr_(ST=exportState,fldname='pmsl',fldptr=dataPtr_pres,&
+    call State_GetFldPtr_(ST=exportState,fldname='pmsl',fldptr=dataPtr_pres,&
       rc=rc,dump=.false.,timeStr=timeStr)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
