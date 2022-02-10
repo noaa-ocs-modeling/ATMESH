@@ -335,26 +335,36 @@ module ATMESH
     !! @param clock an ESMF_Clock object
     !! @param rc return code
 !
-  subroutine InitializeP2(model, importState, exportState, clock, rc)
+  SUBROUTINE InitializeP2(model, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: model
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock, driverClock
     integer, intent(out) :: rc
     
-    ! local variables    
-    type(ESMF_TimeInterval) :: ATMESHTimeStep
-    type(ESMF_Field)        :: field
+    ! local variables
     !Saeed added
     type(meshdata)               :: mdataw
     type(ESMF_Mesh)              :: ModelMesh,meshIn,meshOut
     type(ESMF_VM)                :: vm
-    type(ESMF_Time)              :: startTime
     integer                      :: localPet, petCount
     character(len=*),parameter   :: subname='(ATMESH:RealizeFieldsProvidingGrid)'
 
+!PV ======================================================= PV - for GL mods
+    real(ESMF_KIND_R8), pointer   :: dataPtr_uwnd(:)
+    real(ESMF_KIND_R8), pointer   :: dataPtr_vwnd(:)
+    real(ESMF_KIND_R8), pointer   :: dataPtr_pres(:)
+
+    type(ESMF_Time)               :: currTime
+    type(ESMF_TimeInterval)       :: timeStep
+    integer                       :: YY, MM, DD, H, M, S
+    character(len=128)            :: timeStr
+
+    type(ESMF_Clock)              :: clock_tmp
+    type(ESMF_State)              :: importState_tmp, exportState_tmp
+!PV ======================================================= PV - for GL mods
+
     rc = ESMF_SUCCESS
 
-    !print *,"ATMESH ..1.............................................. >> "
     !> \details Get current ESMF VM.
     call ESMF_VMGetCurrent(vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -362,13 +372,11 @@ module ATMESH
       file=__FILE__)) &
       return  ! bail out
 
-    !print *,"ATMESH ..2.............................................. >> "
     ! Get query local pet information for handeling global node information
     call ESMF_VMGet(vm, localPet=localPet, petCount=petCount, rc=rc)
     ! call ESMF_VMPrint(vm, rc=rc)
 
-    !print *,localPet,"< LOCAL pet, ATMESH ..3.............................................. >> "
-    !! Assign VM to mesh data type.
+    ! Assign VM to mesh data type.
     mdataw%vm = vm
 
     call construct_meshdata_from_netcdf(mdataw)
@@ -382,21 +390,11 @@ module ATMESH
       file=__FILE__)) &
       return  ! bail out
 
-
     meshIn  = ModelMesh ! for now out same as in
     meshOut = meshIn
 
     mdataInw  = mdataw
     mdataOutw = mdataw
-
-    !print *,"..................................................... >> "
-    !print *,"NumNd", mdataw%NumNd
-    !print *,"NumOwnedNd", mdataw%NumOwnedNd
-    !print *,"NumEl", mdataw%NumEl
-    !print *,"NumND_per_El", mdataw%NumND_per_El
-    !print *,"NumOwnedNd mdataOutw", mdataOutw%NumOwnedNd
-
-
 
     call ATMESH_RealizeFields(importState, meshIn , mdataw, fldsToWav_num, fldsToWav, "ATMESH import", rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -410,27 +408,89 @@ module ATMESH
         file=__FILE__)) &
         return  ! bail out
 
-      !Init ATMesh
-!    ! query Component for the driverClock
-!    call NUOPC_ModelGet(model, driverClock=driverClock, rc=rc)
-!    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!      line=__LINE__, &
-!      file=__FILE__)) &
-!      return  ! bail out
-    
-    ! get the start time and current time out of the clock
-!    call ESMF_ClockGet(driverClock, startTime=startTime, rc=rc)
-!    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!      line=__LINE__, &
-!      file=__FILE__)) &
-!      return  ! bail out
+!PV ======================================================= PV - for GL mods
+    call NUOPC_ModelGet(model, importState=importState_tmp, &
+      exportState=exportState_tmp, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+     return  ! bail out
 
-!    call read_atmesh_nc(startTime)
+    call ESMF_ClockPrint(clock, options="currTime", &
+      preString="------>Advancing ATMESH from: ", rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    call ESMF_TimePrint(currTime + timeStep, &
+      preString="------------------ATMESH-------------> to: ", rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    call ESMF_TimeGet(currTime, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+    write(info, *) "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
+    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
+    
+    call ESMF_TimeGet(currTime, timeStringISOFrac=timeStr , rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+    ! Get the data arrays
+    CALL read_atmesh_nc(currTime)
+
+    !--- (FIELD 1): PACK and send u-x wind component
+    CALL State_GetFldPtr_(ST = exportState, fldName = 'izwh10m', fldPtr = dataPtr_uwnd, &
+                          rc = rc, dump = .FALSE., timeStr = timeStr)
+    IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
+        line = __LINE__,  &
+        file = __FILE__)) &
+      RETURN  ! bail out
+
+    ! Fill nodes for dataPtr_izwh10m vector
+    dataPtr_uwnd = UWND(:, 1)
+
+    !--- (FIELD 2): PACK and send v-y wind component
+    CALL State_GetFldPtr_(ST = exportState,fldName = 'imwh10m', fldPtr = dataPtr_vwnd, &
+                          rc = rc, dump = .FALSE., timeStr = timeStr)
+    IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
+        line = __LINE__,  &
+        file = __FILE__)) &
+      RETURN  ! bail out
+
+    dataPtr_vwnd = VWND(:, 1)
+
+    !--- (FIELD 3): PACK and send pmsl
+    CALL State_GetFldPtr_(ST = exportState, fldName = 'pmsl', fldPtr = dataPtr_pres, &
+                          rc = rc,dump = .FALSE., timeStr = timeStr)
+    IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
+        line = __LINE__,  &
+        file = __FILE__)) &
+      RETURN  ! bail out
+
+    ! Fill only owned nodes for dataPtr_pmsl vector
+    dataPtr_pres = PRES(:, 1)
+!PV ======================================================= PV - for GL mods
 
     write(info,*) subname,' --- initialization phase 2 completed --- '
-    !print *,      subname,' --- initialization phase 2 completed --- '
     call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=dbrc)
-  end subroutine
+
+  END SUBROUTINE InitializeP2
 
 
  !> Adds a set of fields to an ESMF_State object.  Each field is wrapped
