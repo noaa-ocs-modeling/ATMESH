@@ -258,8 +258,8 @@ module ATMESH
     
     !--------- export fields from ATMESH -------------
     call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="air_pressure_at_sea_level" , shortname= "pmsl" )
-    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="inst_zonal_wind_height10m" , shortname= "izwh10m" )
-    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="inst_merid_wind_height10m" , shortname= "imwh10m" )
+    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="eastward_wind_at_10m_height" , shortname= "izwh10m" )
+    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="northward_wind_at_10m_height" , shortname= "imwh10m" )
     !
     write(info,*) subname,' --- Passed--- '
     !print *,      subname,' --- Passed --- '
