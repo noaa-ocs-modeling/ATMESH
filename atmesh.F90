@@ -3,10 +3,8 @@
 !! @author Saeed Moghimi (moghimis@gmail.com)
 !! @date 15/1/17 Original documentation
 !------------------------------------------------------
-!LOG-----------------
-!
-!
-!
+
+#define INITSTEPFIX_on
 
 module ATMESH
 
@@ -67,7 +65,7 @@ module ATMESH
   !!
   !! @param model an ESMF_GridComp object
   !! @param rc return code
-  subroutine SetServices(model, rc)
+  SUBROUTINE SetServices(model, rc)
     type(ESMF_GridComp)  :: model
     integer, intent(out) :: rc
 
@@ -78,67 +76,67 @@ module ATMESH
     rc = ESMF_SUCCESS
     
     ! readd config file
-    call read_config()
+    CALL read_config()
     
     ! the NUOPC model component will register the generic methods
-    call NUOPC_CompDerive(model, model_routine_SS, rc=rc)
+    CALL NUOPC_CompDerive(model, model_routine_SS, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
     
     ! set entry point for methods that require specific implementation
-    call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
+    CALL NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
       phaseLabelList=(/"IPDv00p1"/), userRoutine=InitializeP1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
-    call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
+      RETURN  ! bail out
+    CALL NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
       phaseLabelList=(/"IPDv00p2"/), userRoutine=InitializeP2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
     
     ! attach specializing method(s)
-    !call NUOPC_CompSpecialize(model, specLabel=model_label_SetClock, &
+    !CALL NUOPC_CompSpecialize(model, specLabel=model_label_SetClock, &
     !  specRoutine=SetClock, rc=rc)
     !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
     !  line=__LINE__, &
     !  file=__FILE__)) &
-    !  return  ! bail out
-    call NUOPC_CompSpecialize(model, specLabel=model_label_Advance, &
+    !  RETURN  ! bail out
+    CALL NUOPC_CompSpecialize(model, specLabel=model_label_Advance, &
       specRoutine=ModelAdvance, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    !call NUOPC_CompSpecialize(model, specLabel=model_label_CheckImport, &
+    !CALL NUOPC_CompSpecialize(model, specLabel=model_label_CheckImport, &
     !  specPhaseLabel="RunPhase1", specRoutine=CheckImport, rc=rc)
     !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
     !  line=__LINE__, &
     !  file=__FILE__)) &
-    !  return  ! bail out
+    !  RETURN  ! bail out
 
-    call NUOPC_CompSpecialize(model, specLabel=model_label_Finalize, &
+    CALL NUOPC_CompSpecialize(model, specLabel=model_label_Finalize, &
       specRoutine=ATMESH_model_finalize, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
 
-    call init_atmesh_nc()
+    CALL init_atmesh_nc()
     write(info,*) subname,' --- Read atmesh info from file --- '
     !print *,      info
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)
 
     write(info,*) subname,' --- adc SetServices completed --- '
     !print *,      subname,' --- adc SetServices completed --- '
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)
-  end subroutine
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)
+  END SUBROUTINE
   
   !-----------------------------------------------------------------------------
     !> First initialize subroutine called by NUOPC.  The purpose
@@ -153,7 +151,7 @@ module ATMESH
     !! @param clock an ESMF_Clock object
     !! @param rc return code
 
-   subroutine InitializeP1(model, importState, exportState, clock, rc)
+   SUBROUTINE InitializeP1(model, importState, exportState, clock, rc)
     type(ESMF_GridComp)  :: model
     type(ESMF_State)     :: importState, exportState
     type(ESMF_Clock)     :: clock
@@ -166,7 +164,7 @@ module ATMESH
     rc = ESMF_SUCCESS
 
 
-    call ATMESH_FieldsSetup()
+    CALL ATMESH_FieldsSetup()
 !
 
       do num = 1,fldsToWav_num
@@ -175,14 +173,14 @@ module ATMESH
           !print *,  "fldsToWav(num)%stdname  ", fldsToWav(num)%stdname
 
           write(info,*) subname,  "fldsToWav(num)%shortname  ", fldsToWav(num)%shortname
-          call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
+          CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
      end do
 
-      call ATMESH_AdvertiseFields(importState, fldsToWav_num, fldsToWav, rc)
+      CALL ATMESH_AdvertiseFields(importState, fldsToWav_num, fldsToWav, rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
 !----------------------------------------------------------------
     do num = 1,fldsFrATM_num
@@ -190,21 +188,21 @@ module ATMESH
         !print *,  "fldsFrATM(num)%shortname  ", fldsFrATM(num)%shortname
         !print *,  "fldsFrATM(num)%stdname  ", fldsFrATM(num)%stdname
         write(info,*) subname,"fldsFrATM(num)%stdname  ", fldsFrATM(num)%stdname
-        call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
+        CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
 
     end do
 !
-    call ATMESH_AdvertiseFields(exportState, fldsFrATM_num, fldsFrATM, rc)
+    CALL ATMESH_AdvertiseFields(exportState, fldsFrATM_num, fldsFrATM, rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
         write(info,*) subname,' --- initialization phase 1 completed --- '
         !print *,      subname,' --- initialization phase 1 completed --- '
-        call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
+        CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
 !
-  end subroutine
+  END SUBROUTINE
 
 
     !> Advertises a set of fields in an ESMF_State object by calling
@@ -214,7 +212,7 @@ module ATMESH
     !! @param nfields number of fields
     !! @param field_defs an array of fld_list_type listing the fields to advertise
     !! @param rc return code
-    subroutine ATMESH_AdvertiseFields(state, nfields, field_defs, rc)
+    SUBROUTINE ATMESH_AdvertiseFields(state, nfields, field_defs, rc)
         type(ESMF_State), intent(inout)             :: state
         integer,intent(in)                          :: nfields
         type(fld_list_type), intent(inout)          :: field_defs(:)
@@ -227,29 +225,29 @@ module ATMESH
 
         do i = 1, nfields
           !print *, 'Advertise: '//trim(field_defs(i)%stdname)//'---'//trim(field_defs(i)%shortname)
-          call ESMF_LogWrite('Advertise: '//trim(field_defs(i)%stdname), ESMF_LOGMSG_INFO, rc=rc)
+          CALL ESMF_LogWrite('Advertise: '//trim(field_defs(i)%stdname), ESMF_LOGMSG_INFO, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
-            return  ! bail out
+            RETURN  ! bail out
 
-          call NUOPC_Advertise(state, &
+          CALL NUOPC_Advertise(state, &
             standardName=field_defs(i)%stdname, &
             name=field_defs(i)%shortname, &
             rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
-            return  ! bail out
+            RETURN  ! bail out
         enddo
         !print *,      subname,' --- IN   --- '
 
-    end subroutine ATMESH_AdvertiseFields
+    END SUBROUTINE ATMESH_AdvertiseFields
 
 
 
 
-   subroutine ATMESH_FieldsSetup
+   SUBROUTINE ATMESH_FieldsSetup
     integer                     :: rc
     character(len=*),parameter  :: subname='(ATMESH:ATMESH_FieldsSetup)'
 
@@ -257,19 +255,19 @@ module ATMESH
     !--------- import fields to ATMESH  -------------
     
     !--------- export fields from ATMESH -------------
-    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="air_pressure_at_sea_level" , shortname= "pmsl" )
-    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="eastward_wind_at_10m_height" , shortname= "izwh10m" )
-    call fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="northward_wind_at_10m_height" , shortname= "imwh10m" )
+    CALL fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="air_pressure_at_sea_level" , shortname= "pmsl" )
+    CALL fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="inst_zonal_wind_height10m" , shortname= "izwh10m" )
+    CALL fld_list_add(num=fldsFrATM_num, fldlist=fldsFrATM, stdname="inst_merid_wind_height10m" , shortname= "imwh10m" )
     !
     write(info,*) subname,' --- Passed--- '
     !print *,      subname,' --- Passed --- '
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)     
-    end subroutine ATMESH_FieldsSetup
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=rc)     
+    END SUBROUTINE ATMESH_FieldsSetup
 
 
     !---------------------------------------------------------------------------------
 
-    subroutine fld_list_add(num, fldlist, stdname, data, shortname, unit)
+    SUBROUTINE fld_list_add(num, fldlist, stdname, data, shortname, unit)
         ! ----------------------------------------------
         ! Set up a list of field information
         ! ----------------------------------------------
@@ -288,9 +286,9 @@ module ATMESH
 
         num = num + 1
         if (num > fldsMax) then
-          call ESMF_LogWrite(trim(subname)//": ERROR num gt fldsMax "//trim(stdname), &
+          CALL ESMF_LogWrite(trim(subname)//": ERROR num gt fldsMax "//trim(stdname), &
             ESMF_LOGMSG_ERROR, line=__LINE__, file=__FILE__, rc=rc)
-          return
+          RETURN
         endif
 
         fldlist(num)%stdname        = trim(stdname)
@@ -314,7 +312,7 @@ module ATMESH
 
         write(info,*) subname,' --- Passed--- '
         !print *,      subname,' --- Passed --- '
-    end subroutine fld_list_add
+    END SUBROUTINE fld_list_add
 
 
 
@@ -349,6 +347,7 @@ module ATMESH
     integer                      :: localPet, petCount
     character(len=*),parameter   :: subname='(ATMESH:RealizeFieldsProvidingGrid)'
 
+#ifdef INITSTEPFIX_on
 !PV ======================================================= PV - for GL mods
     real(ESMF_KIND_R8), pointer   :: dataPtr_uwnd(:)
     real(ESMF_KIND_R8), pointer   :: dataPtr_vwnd(:)
@@ -362,33 +361,34 @@ module ATMESH
     type(ESMF_Clock)              :: clock_tmp
     type(ESMF_State)              :: importState_tmp, exportState_tmp
 !PV ======================================================= PV - for GL mods
+#endif
 
     rc = ESMF_SUCCESS
 
     !> \details Get current ESMF VM.
-    call ESMF_VMGetCurrent(vm, rc=rc)
+    CALL ESMF_VMGetCurrent(vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
     ! Get query local pet information for handeling global node information
-    call ESMF_VMGet(vm, localPet=localPet, petCount=petCount, rc=rc)
-    ! call ESMF_VMPrint(vm, rc=rc)
+    CALL ESMF_VMGet(vm, localPet=localPet, petCount=petCount, rc=rc)
+    ! CALL ESMF_VMPrint(vm, rc=rc)
 
     ! Assign VM to mesh data type.
     mdataw%vm = vm
 
-    call construct_meshdata_from_netcdf(mdataw)
+    CALL construct_meshdata_from_netcdf(mdataw)
     
-    call create_parallel_esmf_mesh_from_meshdata(mdataw,ModelMesh )
+    CALL create_parallel_esmf_mesh_from_meshdata(mdataw,ModelMesh )
     !
 
-    call ESMF_MeshWrite(ModelMesh, filename="atmesh_mesh.nc", rc=rc)
+    CALL ESMF_MeshWrite(ModelMesh, filename="atmesh_mesh.nc", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
     meshIn  = ModelMesh ! for now out same as in
     meshOut = meshIn
@@ -396,67 +396,68 @@ module ATMESH
     mdataInw  = mdataw
     mdataOutw = mdataw
 
-    call ATMESH_RealizeFields(importState, meshIn , mdataw, fldsToWav_num, fldsToWav, "ATMESH import", rc)
+    CALL ATMESH_RealizeFields(importState, meshIn , mdataw, fldsToWav_num, fldsToWav, "ATMESH import", rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 !
-    call ATMESH_RealizeFields(exportState, meshOut, mdataw, fldsFrATM_num, fldsFrATM, "ATMESH export", rc)
+    CALL ATMESH_RealizeFields(exportState, meshOut, mdataw, fldsFrATM_num, fldsFrATM, "ATMESH export", rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
+#ifdef INITSTEPFIX_on
 !PV ======================================================= PV - for GL mods
-    call NUOPC_ModelGet(model, importState=importState_tmp, &
+    CALL NUOPC_ModelGet(model, importState=importState_tmp, &
       exportState=exportState_tmp, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-     return  ! bail out
+     RETURN  ! bail out
 
-    call ESMF_ClockPrint(clock, options="currTime", &
+    CALL ESMF_ClockPrint(clock, options="currTime", &
       preString="------>Advancing ATMESH from: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
+    CALL ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_TimePrint(currTime + timeStep, &
+    CALL ESMF_TimePrint(currTime + timeStep, &
       preString="------------------ATMESH-------------> to: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_TimeGet(currTime, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
+    CALL ESMF_TimeGet(currTime, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
     write(info, *) "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
     
-    call ESMF_TimeGet(currTime, timeStringISOFrac=timeStr , rc=rc)
+    CALL ESMF_TimeGet(currTime, timeStringISOFrac=timeStr , rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
     ! Get the data arrays
     CALL read_atmesh_nc(currTime)
 
     !--- (FIELD 1): PACK and send u-x wind component
-    CALL State_GetFldPtr_(ST = exportState, fldName = 'izwh10m', fldPtr = dataPtr_uwnd, &
-                          rc = rc, dump = .FALSE., timeStr = timeStr)
+    CALL State_GetFldPtr(ST = exportState, fldName = 'izwh10m', fldPtr = dataPtr_uwnd, &
+                         rc = rc, dump = .FALSE., timeStr = timeStr)
     IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
         line = __LINE__,  &
         file = __FILE__)) &
@@ -466,8 +467,8 @@ module ATMESH
     dataPtr_uwnd = UWND(:, 1)
 
     !--- (FIELD 2): PACK and send v-y wind component
-    CALL State_GetFldPtr_(ST = exportState,fldName = 'imwh10m', fldPtr = dataPtr_vwnd, &
-                          rc = rc, dump = .FALSE., timeStr = timeStr)
+    CALL State_GetFldPtr(ST = exportState,fldName = 'imwh10m', fldPtr = dataPtr_vwnd, &
+                         rc = rc, dump = .FALSE., timeStr = timeStr)
     IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
         line = __LINE__,  &
         file = __FILE__)) &
@@ -476,19 +477,24 @@ module ATMESH
     dataPtr_vwnd = VWND(:, 1)
 
     !--- (FIELD 3): PACK and send pmsl
-    CALL State_GetFldPtr_(ST = exportState, fldName = 'pmsl', fldPtr = dataPtr_pres, &
-                          rc = rc,dump = .FALSE., timeStr = timeStr)
-    IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
-        line = __LINE__,  &
-        file = __FILE__)) &
-      RETURN  ! bail out
+    !PV Need to keep NUOPC_IsConnected here instead inside State_GetFldPtr because
+    !PV of the assignement of the data to dataPtr_pres
+    IF (NUOPC_IsConnected(exportState, fieldName = 'pmsl')) THEN ! added by Saeed 10/25/2022
+      CALL State_GetFldPtr(ST = exportState, fldName = 'pmsl', fldPtr = dataPtr_pres, &
+                           rc = rc,dump = .FALSE., timeStr = timeStr)
+      IF (ESMF_LogFoundError(rcToCheck = rc, msg = ESMF_LOGERR_PASSTHRU, &
+          line = __LINE__,  &
+          file = __FILE__)) &
+        RETURN  ! bail out
 
-    ! Fill only owned nodes for dataPtr_pmsl vector
-    dataPtr_pres = PRES(:, 1)
+      ! Fill nodes for dataPtr_pmsl vector
+      dataPtr_pres = PRES(:, 1)
+    ENDIF
 !PV ======================================================= PV - for GL mods
+#endif
 
     write(info,*) subname,' --- initialization phase 2 completed --- '
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=dbrc)
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=dbrc)
 
   END SUBROUTINE InitializeP2
 
@@ -503,7 +509,7 @@ module ATMESH
   !! @param field_defs array of fld_list_type indicating the fields to add
   !! @param tag used to output to the log
   !! @param rc return code
-  subroutine ATMESH_RealizeFields(state, mesh, mdata, nfields, field_defs, tag, rc)
+  SUBROUTINE ATMESH_RealizeFields(state, mesh, mdata, nfields, field_defs, tag, rc)
 
     type(ESMF_State), intent(inout)             :: state
     type(ESMF_Mesh), intent(in)                 :: mesh
@@ -526,17 +532,17 @@ module ATMESH
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
           file=__FILE__)) &
-          return  ! bail out
+          RETURN  ! bail out
 
         if (NUOPC_IsConnected(state, fieldName=field_defs(i)%shortname)) then
 
-            call NUOPC_Realize(state, field=field, rc=rc)
+            CALL NUOPC_Realize(state, field=field, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
-              return  ! bail out
+              RETURN  ! bail out
 
-            call ESMF_LogWrite(subname // tag // " Field "// field_defs(i)%stdname // " is connected.", &
+            CALL ESMF_LogWrite(subname // tag // " Field "// field_defs(i)%stdname // " is connected.", &
               ESMF_LOGMSG_INFO, &
               line=__LINE__, &
               file=__FILE__, &
@@ -545,7 +551,7 @@ module ATMESH
             !print *,      subname,' --- Connected --- '
 
         else
-            call ESMF_LogWrite(subname // tag // " Field "// field_defs(i)%stdname // " is not connected.", &
+            CALL ESMF_LogWrite(subname // tag // " Field "// field_defs(i)%stdname // " is not connected.", &
               ESMF_LOGMSG_INFO, &
               line=__LINE__, &
               file=__FILE__, &
@@ -553,11 +559,11 @@ module ATMESH
             ! TODO: Initialize the value in the pointer to 0 after proper restart is setup
             !if(associated(field_defs(i)%farrayPtr) ) field_defs(i)%farrayPtr = 0.0
             ! remove a not connected Field from State
-            call ESMF_StateRemove(state, (/field_defs(i)%shortname/), rc=rc)
+            CALL ESMF_StateRemove(state, (/field_defs(i)%shortname/), rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
-              return  ! bail out
+              RETURN  ! bail out
             !print *,      subname,' --- Not-Connected --- '
             !print *,      subname," Field ", field_defs(i)%stdname ,' --- Not-Connected --- '
         endif
@@ -565,12 +571,12 @@ module ATMESH
 
         write(info,*) subname,' --- OUT--- '
         !print *,      subname,' --- OUT --- '
-        call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
-  end subroutine ATMESH_RealizeFields
+        CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
+  END SUBROUTINE ATMESH_RealizeFields
   !-----------------------------------------------------------------------------
 
 
-!  subroutine SetClock_mine(model, rc)
+!  SUBROUTINE SetClock_mine(model, rc)
 !    type(ESMF_GridComp)  :: model
 !    integer, intent(out) :: rc
 !
@@ -581,11 +587,11 @@ module ATMESH
 !    rc = ESMF_SUCCESS
 !
 !    ! query the Component for its clock, importState and exportState
-!    call NUOPC_ModelGet(model, modelClock=clock, rc=rc)
+!    CALL NUOPC_ModelGet(model, modelClock=clock, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
 !
 !
 !    ! initialize internal clock
@@ -594,26 +600,26 @@ module ATMESH
 !    ! - reset the component clock to have a timeStep that is for adc-atmesh of the parent
 !    !   -> timesteps
 !    
-!    !call ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, sN=atm_num, sD=atm_den, rc=rc) ! 5 minute steps
+!    !CALL ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, sN=atm_num, sD=atm_den, rc=rc) ! 5 minute steps
 !    !TODO: use nint !!?
 !
-!    call ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, rc=rc) ! 5 minute steps
+!    CALL ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, rc=rc) ! 5 minute steps
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !       line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
-!    call NUOPC_CompSetClock(model, clock, ATMESHTimeStep, rc=rc)
+!      RETURN  ! bail out
+!    CALL NUOPC_CompSetClock(model, clock, ATMESHTimeStep, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
 !
 !    print *, "ATMESH Timeinterval1 = "
-!    call ESMF_TimeIntervalPrint(ATMESHTimeStep, options="string", rc=rc)
+!    CALL ESMF_TimeIntervalPrint(ATMESHTimeStep, options="string", rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !       line=__LINE__, &
 !        file=__FILE__)) &
-!        return  ! bail out    
+!        RETURN  ! bail out    
 !
 !
 !    ! initialize internal clock
@@ -622,14 +628,14 @@ module ATMESH
 !    ! - reset the component clock to have a timeStep that is for adc-atmesh of the parent
 !    !   -> timesteps
 !    
-!    !call ESMF_TimeIntervalSet(ATMESHTimeStep, s=     adc_cpl_int, sN=adc_cpl_num, sD=adc_cpl_den, rc=rc) ! 5 minute steps
+!    !CALL ESMF_TimeIntervalSet(ATMESHTimeStep, s=     adc_cpl_int, sN=adc_cpl_num, sD=adc_cpl_den, rc=rc) ! 5 minute steps
 !    !TODO: use nint !!?
 !
-!  end subroutine
+!  END SUBROUTINE
 
   !-----------------------------------------------------------------------------
   ! From CICE model uses same clock as parent gridComp
-!  subroutine SetClock(model, rc)
+!  SUBROUTINE SetClock(model, rc)
 !    type(ESMF_GridComp)  :: model
 !    integer, intent(out) :: rc
     
@@ -641,39 +647,39 @@ module ATMESH
 !    rc = ESMF_SUCCESS
     
     ! query the Component for its clock, importState and exportState
-!    call ESMF_GridCompGet(model, clock=clock, rc=rc)
+!    CALL ESMF_GridCompGet(model, clock=clock, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
-    !call ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, sN=atm_num, sD=atm_den, rc=rc) ! 5 minute steps
+!      RETURN  ! bail out
+    !CALL ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, sN=atm_num, sD=atm_den, rc=rc) ! 5 minute steps
     ! tcraig: dt is the cice thermodynamic timestep in seconds
-!    call ESMF_TimeIntervalSet(timestep, s=atm_int, rc=rc)
+!    CALL ESMF_TimeIntervalSet(timestep, s=atm_int, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
 
-!    call ESMF_ClockSet(clock, timestep=timestep, rc=rc)
+!    CALL ESMF_ClockSet(clock, timestep=timestep, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
       
     ! initialize internal clock
     ! here: parent Clock and stability timeStep determine actual model timeStep
-!    call ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, rc=rc) 
+!    CALL ESMF_TimeIntervalSet(ATMESHTimeStep, s=atm_int, rc=rc) 
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
-!    call NUOPC_CompSetClock(model, clock, ATMESHTimeStep, rc=rc)
+!      RETURN  ! bail out
+!    CALL NUOPC_CompSetClock(model, clock, ATMESHTimeStep, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
     
-!  end subroutine
+!  END SUBROUTINE
     !-----------------------------------------------------------------------------
 
       !> Called by NUOPC to advance the ATMESH model a single timestep >>>>>
@@ -686,7 +692,7 @@ module ATMESH
       !! @param model an ESMF_GridComp object
       !! @param rc return code
       !-----------------------------------------------------------------------------
-  subroutine ModelAdvance(model, rc)
+  SUBROUTINE ModelAdvance(model, rc)
     type(ESMF_GridComp)  :: model
     integer, intent(out) :: rc
 
@@ -717,12 +723,12 @@ module ATMESH
 
     rc = ESMF_SUCCESS
     ! query the Component for its clock, importState and exportState
-    call NUOPC_ModelGet(model, modelClock=clock, importState=importState, &
+    CALL NUOPC_ModelGet(model, modelClock=clock, importState=importState, &
       exportState=exportState, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
     ! HERE THE MODEL ADVANCES: currTime -> currTime + timeStep
 
@@ -733,41 +739,41 @@ module ATMESH
     ! will come in by one internal timeStep advanced. This goes until the
     ! stopTime of the internal Clock has been reached.
 
-    call ESMF_ClockPrint(clock, options="currTime", &
+    CALL ESMF_ClockPrint(clock, options="currTime", &
       preString="------>Advancing ATMESH from: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
+    CALL ESMF_ClockGet(clock, currTime=currTime, timeStep=timeStep, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_TimePrint(currTime + timeStep, &
+    CALL ESMF_TimePrint(currTime + timeStep, &
       preString="------------------ATMESH-------------> to: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    call ESMF_TimeGet(currTime, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
+    CALL ESMF_TimeGet(currTime, yy=YY, mm=MM, dd=DD, h=H, m=M, s=S, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
     print *      , "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
     write(info, *) "ATMESH currTime = ", YY, "/", MM, "/", DD," ", H, ":", M, ":", S
-    call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
+    CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, line=__LINE__, file=__FILE__, rc=rc)
     
-    call ESMF_TimeGet(currTime, timeStringISOFrac=timeStr , rc=rc)
+    CALL ESMF_TimeGet(currTime, timeStringISOFrac=timeStr , rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
-        return  ! bail out
+        RETURN  ! bail out
 
     !-----------------------------------------
     !   IMPORT
@@ -779,75 +785,84 @@ module ATMESH
     !-----------------------------------------
     !update uwnd, vwnd, pres from nearset time in atmesh netcdf file
     !TODO: update file name!!!!
-    call read_atmesh_nc(currTime)
+    CALL read_atmesh_nc(currTime)
 
-    !pack and send exported fields
-    allocate (tmp(mdataOutw%NumOwnedNd))
+!DEL   !pack and send exported fields
+!DEL   allocate (tmp(mdataOutw%NumOwnedNd))
 
-    ! >>>>> PACK and send UWND
-    !call State_GetFldPtr(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd,rc=rc)
-    call State_GetFldPtr_(ST=exportState,fldname='izwh10m',fldptr=dataPtr_uwnd, &
-      rc=rc,dump=.false.,timeStr=timeStr)
+    !--- (FIELD 1): PACK and send u-x wind component
+    CALL State_GetFldPtr(ST = exportState, fldname = 'izwh10m', fldptr = dataPtr_uwnd, &
+                         rc = rc, dump = .FALSE., timeStr = timeStr)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    iwind_test = iwind_test + 1
-    !fill only owned nodes for tmp vector
-    do i1 = 1, mdataOutw%NumOwnedNd, 1
-        tmp(i1) = UWND(mdataOutw%owned_to_present_nodes(i1),1)
-        !tmp(i1) = iwind_test  * i1 / 100000.0
-        !tmp(i1) = -3.0
-    end do
-    !assign to field
-    dataPtr_uwnd = tmp
-    !----------------------------------------
-    ! >>>>> PACK and send VWND
-    call State_GetFldPtr_(ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd, &
-      rc=rc,dump=.false.,timeStr=timeStr)
-    !call State_GetFldPtr(ST=exportState,fldname='imwh10m',fldptr=dataPtr_vwnd,rc=rc)
+    ! Fill nodes for dataPtr_izwh10m vector
+    dataPtr_uwnd = UWND(:, 1)
+
+!DEL    iwind_test = iwind_test + 1
+
+!DEL   !fill only owned nodes for tmp vector
+!DEL   do i1 = 1, mdataOutw%NumOwnedNd, 1
+!DEL       tmp(i1) = UWND(mdataOutw%owned_to_present_nodes(i1),1)
+!DEL       !tmp(i1) = iwind_test  * i1 / 100000.0
+!DEL       !tmp(i1) = -3.0
+!DEL   end do
+!DEL   !assign to field
+!DEL   dataPtr_uwnd = tmp
+
+    !--- (FIELD 2): PACK and send v-y wind component
+    CALL State_GetFldPtr(ST = exportState, fldname = 'imwh10m', fldptr = dataPtr_vwnd, &
+                         rc = rc, dump = .FALSE., timeStr = timeStr)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
-      return  ! bail out
+      RETURN  ! bail out
 
-    !fill only owned nodes for tmp vector
-    do i1 = 1, mdataOutw%NumOwnedNd, 1
-        tmp(i1) = VWND(mdataOutw%owned_to_present_nodes(i1),1)
-        !tmp(i1) = 15.0
-    end do
-    !assign to field
-    dataPtr_vwnd = tmp
-    !----------------------------------------
-    ! >>>>> PACK and send PRES
-    call State_GetFldPtr_(ST=exportState,fldname='pmsl',fldptr=dataPtr_pres,&
-      rc=rc,dump=.false.,timeStr=timeStr)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+    dataPtr_vwnd = VWND(:, 1)
 
-    !fill only owned nodes for tmp vector
-    do i1 = 1, mdataOutw%NumOwnedNd, 1
-        tmp(i1) = PRES(mdataOutw%owned_to_present_nodes(i1),1) 
-        
-        if ( abs(tmp(i1) ).gt. 1e11)  then
-          STOP '  dataPtr_pmsl > mask1 > in ATMesh ! '     
-        end if
-        !tmp(i1) = 1e4
-    end do
-    !assign to field
-    dataPtr_pres = tmp
-    !----------------------------------------
+!DEL   !fill only owned nodes for tmp vector
+!DEL   do i1 = 1, mdataOutw%NumOwnedNd, 1
+!DEL       tmp(i1) = VWND(mdataOutw%owned_to_present_nodes(i1),1)
+!DEL       !tmp(i1) = 15.0
+!DEL   end do
+!DEL   !assign to field
+!DEL   dataPtr_vwnd = tmp
 
+    !--- (FIELD 3): PACK and send pmsl
+    !PV Need to keep NUOPC_IsConnected here instead inside State_GetFldPtr because
+    !PV of the assignement of the data to dataPtr_pres
+    IF (NUOPC_IsConnected(exportState, fieldName = 'pmsl')) THEN ! added by Saeed 10/25/2022
+      CALL State_GetFldPtr(ST = exportState, fldname = 'pmsl', fldptr = dataPtr_pres, &
+                           rc = rc, dump = .FALSE., timeStr = timeStr)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        RETURN  ! bail out
+
+      ! Fill nodes for dataPtr_pmsl vector
+      dataPtr_pres = PRES(:, 1)
+      
+!DEL     !fill only owned nodes for tmp vector
+!DEL     do i1 = 1, mdataOutw%NumOwnedNd, 1
+!DEL         tmp(i1) = PRES(mdataOutw%owned_to_present_nodes(i1),1) 
+!DEL         
+!DEL         if ( abs(tmp(i1) ).gt. 1e11)  then
+!DEL           STOP '  dataPtr_pmsl > mask1 > in ATMesh ! '     
+!DEL         end if
+!DEL         !tmp(i1) = 1e4
+!DEL     end do
+!DEL     !assign to field
+!DEL     dataPtr_pres = tmp
+    ENDIF
 
     !! TODO:  not a right thing to do. we need to fix the grid object mask <<<<<<
     !where(dataPtr_uwnd.gt.3e4) dataPtr_uwnd = 0.0
     !where(dataPtr_vwnd.gt.3e4) dataPtr_vwnd = 0.0
 
 !
-  end subroutine
+  END SUBROUTINE
 !
   !-----------------------------------------------------------------------
 !-----------------------------------------------------------
@@ -857,7 +872,7 @@ module ATMESH
   !! @param fldname name of the fields
   !! @param fldptr pointer to 1D array
   !! @param rc return code
-  subroutine State_GetFldPtr_(ST, fldname, fldptr, rc, dump,timeStr)
+  SUBROUTINE State_GetFldPtr(ST, fldname, fldptr, rc, dump,timeStr)
     type(ESMF_State), intent(in) :: ST
     character(len=*), intent(in) :: fldname
     real(ESMF_KIND_R8), pointer, intent(in) :: fldptr(:)
@@ -869,52 +884,26 @@ module ATMESH
     integer :: lrc
     character(len=*),parameter :: subname='(atmesh_cap:State_GetFldPtr)'
 
-    call ESMF_StateGet(ST, itemName=trim(fldname), field=lfield, rc=lrc)
-    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=lrc)
-    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
+    CALL ESMF_StateGet(ST, itemName=trim(fldname), field=lfield, rc=lrc)
+    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) RETURN
+    CALL ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=lrc)
+    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) RETURN
     if (present(rc)) rc = lrc
 
     if (dump) then
        if (.not. present(timeStr)) timeStr="_"
-        call ESMF_FieldWrite(lfield, &
+        CALL ESMF_FieldWrite(lfield, &
         fileName='field_atmesh_'//trim(fldname)//trim(timeStr)//'.nc', &
         rc=rc,overwrite=.true.)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
           line=__LINE__, &
           file=__FILE__)) &
-          return  ! bail out
+          RETURN  ! bail out
     endif
-  end subroutine State_GetFldPtr_
+  END SUBROUTINE State_GetFldPtr
 
 
-  !> Retrieve a pointer to a field's data array from inside an ESMF_State object.
-  !!
-  !! @param ST the ESMF_State object
-  !! @param fldname name of the fields
-  !! @param fldptr pointer to 1D array
-  !! @param rc return code
-  subroutine State_GetFldPtr(ST, fldname, fldptr, rc)
-    type(ESMF_State), intent(in) :: ST
-    character(len=*), intent(in) :: fldname
-    real(ESMF_KIND_R8), pointer, intent(in) :: fldptr(:)
-    integer, intent(out), optional :: rc
-
-    ! local variables
-    type(ESMF_Field) :: lfield
-    integer :: lrc
-    character(len=*),parameter :: subname='(ATMESH:State_GetFldPtr)'
-
-    call ESMF_StateGet(ST, itemName=trim(fldname), field=lfield, rc=lrc)
-    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    call ESMF_FieldGet(lfield, farrayPtr=fldptr, rc=lrc)
-    if (ESMF_LogFoundError(rcToCheck=lrc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) return
-    if (present(rc)) rc = lrc
-  end subroutine State_GetFldPtr
-
-
-
-  subroutine CheckImport(model, rc)
+  SUBROUTINE CheckImport(model, rc)
     type(ESMF_GridComp)   :: model
     integer, intent(out)  :: rc
     
@@ -928,26 +917,25 @@ module ATMESH
     logical                 :: atCorrectTime
 
     rc = ESMF_SUCCESS
-    return
+    RETURN
 
     
 !    ! query Component for the driverClock
-!    call NUOPC_ModelGet(model, driverClock=driverClock, rc=rc)
+!    CALL NUOPC_ModelGet(model, driverClock=driverClock, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
+!      RETURN  ! bail out
 !    
 !    ! get the start time and current time out of the clock
-!    call ESMF_ClockGet(driverClock, startTime=startTime, &
+!    CALL ESMF_ClockGet(driverClock, startTime=startTime, &
 !      currTime=currTime, rc=rc)
 !    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
 !      line=__LINE__, &
 !      file=__FILE__)) &
-!      return  ! bail out
-    
-   
-  end subroutine
+!      RETURN  ! bail out
+
+  END SUBROUTINE
 
 
   !-----------------------------------------------------------------------
@@ -956,7 +944,7 @@ module ATMESH
   !!
   !! @param gcomp the ESMF_GridComp object
   !! @param rc return code
-    subroutine ATMESH_model_finalize(gcomp, rc)
+    SUBROUTINE ATMESH_model_finalize(gcomp, rc)
 
         ! input arguments
         type(ESMF_GridComp)  :: gcomp
@@ -970,23 +958,23 @@ module ATMESH
         rc = ESMF_SUCCESS
 
         write(info,*) subname,' --- finalize called --- '
-        call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
+        CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
 
-        call NUOPC_ModelGet(gcomp, modelClock=clock, rc=rc)
+        CALL NUOPC_ModelGet(gcomp, modelClock=clock, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
-            return  ! bail out
+            RETURN  ! bail out
 
-        call ESMF_ClockGet(clock, currTime=currTime, rc=rc)
+        CALL ESMF_ClockGet(clock, currTime=currTime, rc=rc)
         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
-            return  ! bail out
+            RETURN  ! bail out
 
         write(info,*) subname,' --- finalize completed --- '
-        call ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
+        CALL ESMF_LogWrite(info, ESMF_LOGMSG_INFO, rc=dbrc)
 
-    end subroutine ATMESH_model_finalize
+    END SUBROUTINE ATMESH_model_finalize
 
 end module
